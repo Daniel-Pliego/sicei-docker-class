@@ -1,18 +1,23 @@
-FROM node:18-alpine as builder
-WORKDIR /sicei
+# Usa la imagen de Node.js 16 como base
+FROM node:18-alpine
 
-COPY package.json package-lock.json ./
-RUN npm ci
+# Establece el directorio de trabajo dentro del contenedor
+WORKDIR /app
+
+# Copia el package.json y el package-lock.json (si existe) para instalar las dependencias
+COPY package.json package-lock.json* ./
+
+# Instala las dependencias
+RUN npm install
+
+# Copia el resto de los archivos de la aplicación
 COPY . .
+
+# Construye la aplicación
 RUN npm run build
 
-FROM node:18-alpine as runner
-WORKDIR /sicei
-COPY --from=builder /sicei/package.json .
-COPY --from=builder /sicei/package-lock.json .
-COPY --from=builder /sicei/next.config.mjs ./
-COPY --from=builder /sicei/public ./public
-COPY --from=builder /sicei/.next/standalone ./
-COPY --from=builder /sicei/.next/static ./.next/static
+# Expone el puerto 3000 en el contenedor
 EXPOSE 3000
-ENTRYPOINT ["npm", "start"]
+
+# Ejecuta la aplicación al iniciar el contenedor
+CMD ["npm", "start"]
